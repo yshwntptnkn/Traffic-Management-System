@@ -5,9 +5,9 @@ At this stage, the focus is on **short-term traffic speed prediction** using his
 
 The forecasting layer is designed to later integrate with:
 
-Graph Neural Networks (spatial modeling)
+- Graph Neural Networks (spatial modeling)
 
-Reinforcement Learning (traffic signal control)
+- Reinforcement Learning (traffic signal control)
 
 For now, this repo implements and evaluates a **robust LSTM-based time-series forecasting baseline.**
 
@@ -16,8 +16,11 @@ For now, this repo implements and evaluates a **robust LSTM-based time-series fo
 ## 📌 Project Status
 
 **Current stage:**
+
 ✅ Traffic forecasting layer complete
+
 ⏳ Graph (GNN) modeling — planned
+
 ⏳ RL-based control — planned
 
 The forecasting model is considered **frozen and production-ready** for downstream integration.
@@ -29,8 +32,7 @@ The forecasting model is considered **frozen and production-ready** for downstre
 Predict future traffic speeds for a road segment using recent historical observations.
 
 Formally:
-
-    *Given traffic speeds over the past 60 minutes, predict speeds for the next 15 minutes.*
+*Given traffic speeds over the past 60 minutes, predict speeds for the next 15 minutes.*
 
 ---
 
@@ -138,10 +140,7 @@ Traffic-Management-System/
 ├── experiments/
 │   └── exp_001_forecasting_only/
 │       ├── lstm.pt    # Trained model weights
-│       └── norm.npy   # Normalization parameters
-│
-├── notebooks/
-│   └── 01_data_exploration.ipynb
+│       └── mean_std.npy   # Normalization parameters
 │
 ├── requirements.txt
 └── README.md
