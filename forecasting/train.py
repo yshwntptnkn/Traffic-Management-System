@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from dataset import TrafficDataset
+from dataset import METRLADataset
 from model import TrafficLSTM
 import numpy as np
 
@@ -24,7 +24,7 @@ std = series.std()
 
 series = (series - mean) / std
 
-dataset = TrafficDataset(series)
+dataset = METRLADataset(series)
 loader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 model = TrafficLSTM()
