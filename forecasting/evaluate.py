@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from dataset import TrafficDataset
+from datasets.metr_la import TrafficDataset
 from model import TrafficLSTM
 
 
