@@ -31,7 +31,7 @@ def train():
     )
 
     adj = torch.tensor(
-        np.load(DATA_DIR / "adj.npy"),
+        np.load(DATA_DIR / "adj_knn_dir.npy"),
         dtype=torch.float32,
         device=DEVICE
     )
