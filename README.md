@@ -191,7 +191,7 @@ Traffic-Management-System/
 │
 ├── graph/
 │   ├── build_graph.py
-│   └── build_gknn.py
+│   └── build_knn.py
 │
 ├── utils/
 │   └── preprocessing.py 
