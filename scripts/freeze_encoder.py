@@ -19,7 +19,7 @@ lstm = TrafficLSTM(
     input_size=1,
     hidden_size=64,
     num_layers=2,
-    output_size=3
+    output_size=1
 ).to(DEVICE)
 
 lstm.load_state_dict(torch.load(LSTM_CKPT, map_location=DEVICE))
@@ -27,7 +27,7 @@ lstm.load_state_dict(torch.load(LSTM_CKPT, map_location=DEVICE))
 gnn = GCN(
     in_dim=64,
     hidden_dim=32,
-    out_dim=32   # embedding dim
+    out_dim=1   # embedding dim
 ).to(DEVICE)
 
 gnn.load_state_dict(torch.load(GNN_CKPT, map_location=DEVICE))
