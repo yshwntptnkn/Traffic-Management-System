@@ -6,6 +6,7 @@ from gnn.model import GCN
 from gnn.embed import LSTM_GNN
 from rl.env import TrafficEnv
 from rl.agent import DQNAgent
+from rl.replay_buffer import ReplayBuffer
 import numpy as np
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,30 +39,41 @@ for p in encoder.parameters():
 
 env = TrafficEnv(encoder, adj, device=DEVICE)
 
-state = env.reset()
-state_dim = state.numel()
+state, _ = env.reset()
+print("State shape:", state.shape)
+state_dim = state.shape[0]
+action_dim = env.action_space.n
 
-agent = DQNAgent(state_dim, num_actions=2)
+agent = DQNAgent(state_dim, action_dim, device=DEVICE)
+
+replay_buffer = ReplayBuffer(capacity=100000)
 
 NUM_EPISODES = 50
 STEPS_PER_EPISODE = 50
 episode_rewards = []
 
 for episode in range(NUM_EPISODES):
-    state = env.reset().flatten()
 
+    state, _ = env.reset()
     total_reward = 0
 
     for step in range(STEPS_PER_EPISODE):
-        action = agent.select_action(state)
 
-        next_state, reward, done = env.step(action)
-        next_state = next_state.flatten()
+        state_tensor = torch.from_numpy(state).float()
+        action = agent.select_action(state_tensor)
 
-        agent.train_step(state, action, reward, next_state)
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
+        
+        replay_buffer.push(state, action, reward, next_state, done)
+
+        agent.train_step(replay_buffer)
 
         state = next_state
         total_reward += reward
+
+        if done:
+            break
 
     episode_rewards.append(total_reward)
     print(f"Episode {episode} | Total Reward: {total_reward:.2f}")

@@ -2,5 +2,5 @@
     "episodes": 50,
     "steps_per_episode": 50,
     "gamma": 0.99,
-    "epsilon_final": 0.1
+    "epsilon_final": 0.049911691230058335
 }
