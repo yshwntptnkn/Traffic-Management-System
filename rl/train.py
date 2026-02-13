@@ -40,7 +40,7 @@ for p in encoder.parameters():
 env = TrafficEnv(encoder, adj, device=DEVICE)
 
 state, _ = env.reset()
-print("State shape:", state.shape)
+#print("State shape:", state.shape)
 state_dim = state.shape[0]
 action_dim = env.action_space.n
 
@@ -51,6 +51,7 @@ replay_buffer = ReplayBuffer(capacity=100000)
 NUM_EPISODES = 50
 STEPS_PER_EPISODE = 50
 episode_rewards = []
+
 
 for episode in range(NUM_EPISODES):
 
@@ -75,8 +76,17 @@ for episode in range(NUM_EPISODES):
         if done:
             break
 
+    if done:
+        print(f"Episode {episode} ended early at step {step}")
+
     episode_rewards.append(total_reward)
     print(f"Episode {episode} | Total Reward: {total_reward:.2f}")
+
+    if episode >= 10:
+        recent_avg = np.mean(total_reward[-10:])
+        print(f"Last 10 Avg Reward: {recent_avg:.2f}")
+
+
 
 torch.save(
     agent.model.state_dict(),

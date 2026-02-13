@@ -24,7 +24,7 @@ class TrafficEnv(gym.Env):
         self.beta = 1.5
         self.gamma = 2.0
 
-        self.action_space = spaces.Discrete(2)
+        self.action_space = spaces.Discrete(self.num_nodes + 1)
 
         embedding_dim = 32
         self.observation_space = spaces.Box(
@@ -36,17 +36,17 @@ class TrafficEnv(gym.Env):
 
         self.reset()
 
-    def reset(self, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
 
         self.current_step = 0
 
-        self.history = torch.rand(
-            self.seq_len, 
-            self.num_nodes, 
-            1,
-            device=self.device
-        ) * 40 + 20
+        initial_queue = torch.rand(self.num_nodes, device=self.device) * 20 + 5
+
+        self.history = torch.stack(
+            [initial_queue.unsqueeze(-1) for _ in range(self.seq_len)],
+            dim=0
+        )
 
         state = self._get_state()
 
@@ -61,32 +61,54 @@ class TrafficEnv(gym.Env):
 
     def step(self, action):
 
-        current_speed = self.history[-1].squeeze(-1)
+        self.current_step += 1
 
-        neighbour_effect = torch.matmul(self.adj, current_speed)
-        neighbour_effect = neighbour_effect / (self.adj.sum(dim=1) + 1e-6)
+        current_queue = self.history[-1].squeeze(-1)
 
-        new_speed = (current_speed + self.alpha * (neighbour_effect - current_speed))
+        prev_total_queue = current_queue.sum()
 
-        congestion = torch.relu(50 - current_speed)
-        new_speed -= self.beta * (congestion / 50)
+        arrivals = torch.rand(self.num_nodes, device=self.device) * 1.0
+        new_queue = current_queue + arrivals
 
-        if action == 1:
-            new_speed += self.gamma
+        new_total_queue = new_queue.sum()
+        queue_reduction = prev_total_queue - new_total_queue
 
-        new_speed = torch.clamp(new_speed, self.min_speed, self.max_speed)
-            
+        action_cost = 0.0
+
+        if action > 0:
+            node_index = action - 1
+
+            clearance_capacity = 20.0
+            cleared = torch.minimum(
+                new_queue[node_index],
+                torch.tensor(clearance_capacity, device=self.device)
+            )
+
+            new_queue[node_index] -= cleared
+            action_cost = 0.5
+
+        spill = torch.matmul(self.adj, new_queue) * 0.005
+        new_queue = new_queue + spill
+
+        max_queue = 100.0
+        new_queue = torch.clamp(new_queue, 0.0, max_queue)
+
         self.history = torch.cat(
-            [self.history[1:], new_speed.unsqueeze(-1).unsqueeze(0)],
+            [self.history[1:], new_queue.unsqueeze(-1).unsqueeze(0)],
             dim=0
         )
 
-        reward = new_speed.mean().item()
+        avg_queue = new_queue.mean()
 
-        terminated = False
+        if action > 0:
+            node_index = action - 1
+            reward = queue_reduction.item() - action_cost
+        else:
+            reward = -0.1
+
+        terminated = avg_queue > 80.0      # network collapse
         truncated = self.current_step >= self.max_steps
 
         next_state = self._get_state()
 
-        
         return next_state, reward, terminated, truncated, {}
