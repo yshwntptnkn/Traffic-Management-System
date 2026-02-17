@@ -20,24 +20,10 @@ adj = torch.tensor(
     device=DEVICE
 )
 
-ckpt = torch.load(
-    ROOT / "experiments" / "exp_003_frozen_encoder" / "encoder_frozen.pt",
-    map_location=DEVICE
-)
+embeddings = np.load(ROOT / "experiments" / "exp_003_embeddings_encoders" / "gnn_embeddings.npy")
+print(embeddings.shape)
 
-lstm = TrafficLSTM(input_size=1, hidden_size=64, num_layers=2, output_size=1)
-gnn = GCN(in_dim=64, hidden_dim=32, out_dim=1)
-
-lstm.load_state_dict(ckpt["lstm_state"])
-gnn.load_state_dict(ckpt["gnn_state"])
-
-encoder = LSTM_GNN(lstm, gnn).to(DEVICE)
-encoder.eval()
-
-for p in encoder.parameters():
-    p.requires_grad = False
-
-env = TrafficEnv(encoder, adj, device=DEVICE)
+env = TrafficEnv(embeddings)
 
 state, _ = env.reset()
 #print("State shape:", state.shape)
@@ -51,12 +37,13 @@ replay_buffer = ReplayBuffer(capacity=100000)
 NUM_EPISODES = 50
 STEPS_PER_EPISODE = 50
 episode_rewards = []
-
+#reward_history = []
 
 for episode in range(NUM_EPISODES):
 
     state, _ = env.reset()
     total_reward = 0
+    done = False
 
     for step in range(STEPS_PER_EPISODE):
 
@@ -74,19 +61,15 @@ for episode in range(NUM_EPISODES):
         total_reward += reward
 
         if done:
+            print(f"Episode {episode} ended early at step {step}")
             break
-
-    if done:
-        print(f"Episode {episode} ended early at step {step}")
 
     episode_rewards.append(total_reward)
     print(f"Episode {episode} | Total Reward: {total_reward:.2f}")
 
-    if episode >= 10:
-        recent_avg = np.mean(total_reward[-10:])
+    if len(episode_rewards) >= 10:
+        recent_avg = np.mean(episode_rewards[-10:])
         print(f"Last 10 Avg Reward: {recent_avg:.2f}")
-
-
 
 torch.save(
     agent.model.state_dict(),
