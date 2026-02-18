@@ -86,7 +86,7 @@ class TrafficEnv(gym.Env):
         self.queue = torch.clamp(self.queue, 0.0, 200.0)
 
         new_total_queue = self.queue.sum().item()
-        reward = (prev_total_queue - new_total_queue) - action_cost 
+        reward = (prev_total_queue - new_total_queue) - action_cost
         reward = max(min(reward, 10), -10)
 
         terminated = self.current_step >= self.max_steps
