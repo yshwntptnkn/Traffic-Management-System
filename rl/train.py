@@ -34,16 +34,26 @@ agent = DQNAgent(state_dim, action_dim, device=DEVICE)
 
 replay_buffer = ReplayBuffer(capacity=100000)
 
-NUM_EPISODES = 50
+NUM_EPISODES = 500
 STEPS_PER_EPISODE = 50
+
+EPS_START = 1.0
+EPS_END = 0.05
+EPS_DECAY_EPISODES = 400
+
 episode_rewards = []
-#reward_history = []
+ep_count = 100
 
 for episode in range(NUM_EPISODES):
 
+    epsilon = max(
+    EPS_END,
+    EPS_START - episode / EPS_DECAY_EPISODES
+    )
+    agent.epsilon = epsilon
+
     state, _ = env.reset()
     total_reward = 0
-    done = False
 
     for step in range(STEPS_PER_EPISODE):
 
@@ -60,16 +70,20 @@ for episode in range(NUM_EPISODES):
         state = next_state
         total_reward += reward
 
-        if done:
-            print(f"Episode {episode} ended early at step {step}")
-            break
-
+    if episode % 10 == 0:
+        agent.target_model.load_state_dict(agent.model.state_dict())
+        
     episode_rewards.append(total_reward)
     print(f"Episode {episode} | Total Reward: {total_reward:.2f}")
 
-    if len(episode_rewards) >= 10:
+    if len(episode_rewards) == ep_count:
         recent_avg = np.mean(episode_rewards[-10:])
         print(f"Last 10 Avg Reward: {recent_avg:.2f}")
+        ep_count += 100
+
+    if episode % 20 == 0:
+        print("Epsilon:", agent.epsilon)
+
 
 torch.save(
     agent.model.state_dict(),

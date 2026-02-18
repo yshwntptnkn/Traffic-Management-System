@@ -1,6 +1,6 @@
 {
-    "episodes": 50,
+    "episodes": 500,
     "steps_per_episode": 50,
     "gamma": 0.99,
-    "epsilon_final": 0.049911691230058335
+    "epsilon_final": 0.05
 }

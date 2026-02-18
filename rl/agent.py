@@ -31,7 +31,7 @@ class DQNAgent:
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
         
-        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-4)
         self.loss_fn = nn.MSELoss()
 
         self.action_dim = action_dim
@@ -49,7 +49,6 @@ class DQNAgent:
     def select_action(self, state):
         if random.random() < self.epsilon:
             return random.randrange(self.action_dim)
-
         with torch.no_grad():
             q_values = self.model(state.unsqueeze(0))
             return torch.argmax(q_values, dim=1).item()
